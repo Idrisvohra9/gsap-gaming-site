@@ -1,8 +1,10 @@
 import { useState, useRef } from "react";
+import { useGSAP } from "@gsap/react";
+import { gsap } from "gsap";
 import { TiLocationArrow } from "react-icons/ti";
 
 export const BentoTilt = ({ children, className = "" }) => {
-  const [transformStyle, setTransformStyle] = useState("");
+  const [isHovering, setIsHovering] = useState(false);
   const itemRef = useRef(null);
 
   const handleMouseMove = (event) => {
@@ -17,22 +19,38 @@ export const BentoTilt = ({ children, className = "" }) => {
     const tiltX = (relativeY - 0.5) * 5;
     const tiltY = (relativeX - 0.5) * -5;
 
-    const newTransform = `perspective(700px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale3d(0.95, 0.95, 0.95)`;
-
-    setTransformStyle(newTransform);
+    gsap.to(itemRef.current, {
+      rotationX: tiltX,
+      rotationY: tiltY,
+      scale: 0.95,
+      transformPerspective: 700,
+      duration: 0.5,
+      ease: "power2.out",
+    });
   };
 
-  const handleMouseLeave = () => {
-    setTransformStyle("");
-  };
+  useGSAP(
+    () => {
+      if (!isHovering) {
+        gsap.to(itemRef.current, {
+          rotationX: 0,
+          rotationY: 0,
+          scale: 1,
+          duration: 0.5,
+          ease: "power2.out",
+        });
+      }
+    },
+    { dependencies: [isHovering] }
+  );
 
   return (
     <div
       ref={itemRef}
       className={className}
       onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      style={{ transform: transformStyle }}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
     >
       {children}
     </div>
@@ -40,22 +58,37 @@ export const BentoTilt = ({ children, className = "" }) => {
 };
 
 export const BentoCard = ({ src, title, description, isComingSoon }) => {
-  const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
-  const [hoverOpacity, setHoverOpacity] = useState(0);
   const hoverButtonRef = useRef(null);
+  const gradientRef = useRef(null);
 
   const handleMouseMove = (event) => {
-    if (!hoverButtonRef.current) return;
+    if (!hoverButtonRef.current || !gradientRef.current) return;
     const rect = hoverButtonRef.current.getBoundingClientRect();
 
-    setCursorPosition({
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top,
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    // Update CSS custom properties directly without state
+    gradientRef.current.style.background = `radial-gradient(100px circle at ${x}px ${y}px, #656fe288, #00000026)`;
+  };
+
+  const handleMouseEnter = () => {
+    if (!gradientRef.current) return;
+    gsap.to(gradientRef.current, {
+      opacity: 1,
+      duration: 0.3,
+      ease: "power2.out",
     });
   };
 
-  const handleMouseEnter = () => setHoverOpacity(1);
-  const handleMouseLeave = () => setHoverOpacity(0);
+  const handleMouseLeave = () => {
+    if (!gradientRef.current) return;
+    gsap.to(gradientRef.current, {
+      opacity: 0,
+      duration: 0.3,
+      ease: "power2.out",
+    });
+  };
 
   return (
     <div className="relative size-full">
@@ -84,11 +117,8 @@ export const BentoCard = ({ src, title, description, isComingSoon }) => {
           >
             {/* Radial gradient hover effect */}
             <div
-              className="pointer-events-none absolute -inset-px opacity-0 transition duration-300"
-              style={{
-                opacity: hoverOpacity,
-                background: `radial-gradient(100px circle at ${cursorPosition.x}px ${cursorPosition.y}px, #656fe288, #00000026)`,
-              }}
+              ref={gradientRef}
+              className="pointer-events-none absolute -inset-px opacity-0"
             />
             <TiLocationArrow className="relative z-20" />
             <p className="relative z-20">coming soon</p>

@@ -15,26 +15,24 @@ export const VideoPreview = ({ children }) => {
     const xOffset = clientX - (rect.left + rect.width / 2); // Calculate X offset
     const yOffset = clientY - (rect.top + rect.height / 2); // Calculate Y offset
 
-    if (isHovering) {
-      // Move the container slightly in the direction of the cursor
-      gsap.to(sectionRef.current, {
-        x: xOffset,
-        y: yOffset,
-        rotationY: xOffset / 2, // Add 3D rotation effect
-        rotationX: -yOffset / 2,
-        transformPerspective: 500, // Perspective for realistic 3D effect
-        duration: 1,
-        ease: "power1.out",
-      });
+    // Move the container slightly in the direction of the cursor
+    gsap.to(sectionRef.current, {
+      x: xOffset,
+      y: yOffset,
+      rotationY: xOffset / 2, // Add 3D rotation effect
+      rotationX: -yOffset / 2,
+      transformPerspective: 500, // Perspective for realistic 3D effect
+      duration: 1,
+      ease: "power1.out",
+    });
 
-      // Move the inner content in the opposite direction for a parallax effect
-      gsap.to(contentRef.current, {
-        x: -xOffset,
-        y: -yOffset,
-        duration: 1,
-        ease: "power1.out",
-      });
-    }
+    // Move the inner content in the opposite direction for a parallax effect
+    gsap.to(contentRef.current, {
+      x: -xOffset,
+      y: -yOffset,
+      duration: 1,
+      ease: "power1.out",
+    });
   };
 
   useGSAP(
